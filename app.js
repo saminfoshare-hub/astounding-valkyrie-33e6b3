@@ -37,6 +37,29 @@ function fmtMoney(n) {
 }
 function entityByKey(key) { return window.ENTITIES.find(e => e.key === key); }
 
+// Supabase/PostgREST caps select('*') at 1000 rows by default (or your
+// project's own "Max Rows" API setting, if lower). This fetches in pages,
+// advancing by however many rows actually came back — not by the requested
+// page size — so it works correctly even if a page is capped shorter than
+// requested. It only stops once a page comes back genuinely empty.
+async function fetchAllRows(table, orderCol) {
+  const pageSize = 1000;
+  let from = 0;
+  let all = [];
+  let guard = 0;
+  while (guard++ < 200) { // safety cap: 200 pages is 200k+ rows, far beyond any table here
+    let query = sb.from(table).select('*');
+    if (orderCol) query = query.order(orderCol, { ascending: false });
+    query = query.range(from, from + pageSize - 1);
+    const { data, error } = await query;
+    if (error) return { data: null, error };
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    from += data.length;
+  }
+  return { data: all, error: null };
+}
+
 /* ---------------- AUTH ---------------- */
 async function checkSession() {
   if (!sb) { renderNoBackend(); return; }
@@ -107,7 +130,7 @@ async function preloadRefCaches() {
   await Promise.all([...refTables].map(async (key) => {
     const ent = entityByKey(key);
     if (!ent) return;
-    const { data, error } = await sb.from(ent.table).select('*');
+    const { data, error } = await fetchAllRows(ent.table);
     if (error) { console.warn('preload', ent.table, error.message); return; }
     cache[ent.table] = data || [];
     refCache[ent.table] = {};
@@ -172,13 +195,17 @@ async function showDashboard() {
 
   const cards = await Promise.all(window.DASHBOARD_CARDS.map(async ([key, label, isMoney, sumField]) => {
     const ent = entityByKey(key);
-    const { data, error } = await sb.from(ent.table).select(isMoney ? sumField : ent.pk);
-    if (error) return { label, value: '—', isMoney };
     if (isMoney) {
+      // Sums need every row's amount, so page through with fetchAllRows.
+      const { data, error } = await fetchAllRows(ent.table);
+      if (error) return { label, value: '—', isMoney };
       const total = (data || []).reduce((s, r) => s + (Number(r[sumField]) || 0), 0);
       return { label, value: fmtMoney(total), isMoney };
     }
-    return { label, value: (data || []).length, isMoney };
+    // Exact row count via head request — no 1000-row cap, no row data transferred.
+    const { count, error } = await sb.from(ent.table).select(ent.pk, { count: 'exact', head: true });
+    if (error) return { label, value: '—', isMoney };
+    return { label, value: count ?? 0, isMoney };
   }));
 
   content.innerHTML = '';
@@ -204,7 +231,7 @@ async function showEntityList(ent) {
   content.innerHTML = '';
   content.appendChild(el('div', { class: 'loading-state' }, 'Loading…'));
 
-  const { data, error } = await sb.from(ent.table).select('*').order(ent.pk, { ascending: false });
+  const { data, error } = await fetchAllRows(ent.table, ent.pk);
   if (error) {
     content.innerHTML = '';
     content.appendChild(el('div', { class: 'empty-state' }, `Could not load ${ent.label}: ${error.message}`));
@@ -240,7 +267,7 @@ function renderEntityList(ent) {
     return;
   }
 
-  const visibleFields = ent.fields.slice(0, 6); // keep table readable; full record shown in edit modal
+  const visibleFields = ent.fields; // show every column, matching the Supabase table exactly
   const thead = el('thead', {}, el('tr', {}, [
     ...visibleFields.map(f => el('th', {}, f.label)),
     el('th', {}, 'Actions'),
@@ -253,7 +280,7 @@ function renderEntityList(ent) {
     ])),
   ])));
 
-  content.appendChild(el('div', { class: 'data-card' }, el('table', { class: 'data-table' }, [thead, tbody])));
+  content.appendChild(el('div', { class: 'data-card', style: 'overflow-x:auto;' }, el('table', { class: 'data-table' }, [thead, tbody])));
 }
 
 function formatCell(field, value) {
