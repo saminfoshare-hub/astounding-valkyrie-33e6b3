@@ -1,225 +1,425 @@
 /* ==========================================================================
-   ENTITY DEFINITIONS
-   One object per database table. This drives the sidebar, list views,
-   search, forms, and dashboard automatically — add a table here and the
-   whole app gets a working screen for it.
-
-   field types: text | number | date | textarea | select(FK)
+   RECRUIT EXPERT — App Logic
    ========================================================================== */
-window.ENTITIES = [
-  // ---------------- CORE ----------------
-  {
-    key: 'agent', table: 'agent', pk: 'coid', label: 'Agents', icon: 'fa-user-tie',
-    group: 'Core', displayField: 'agentname',
-    fields: [
-      { name: 'agentname', label: 'Agent Name', type: 'text', required: true },
-      { name: 'agency', label: 'Agency', type: 'text' },
-      { name: 'resident', label: 'Resident', type: 'text' },
-      { name: 'tel', label: 'Telephone', type: 'text' },
-      { name: 'mob', label: 'Mobile', type: 'text' },
-      { name: 'email', label: 'Email', type: 'text' },
-      { name: 'check', label: 'Check', type: 'text' },
-    ],
-  },
-  {
-    key: 'company', table: 'company', pk: 'agencyid', label: 'Companies', icon: 'fa-building',
-    group: 'Core', displayField: 'agencyname',
-    fields: [
-      { name: 'agencyname', label: 'Agency Name', type: 'text', required: true },
-      { name: 'nameofowner', label: 'Owner Name', type: 'text' },
-      { name: 'ownertype', label: 'Owner Type', type: 'text' },
-      { name: 'officeaddress', label: 'Office Address', type: 'textarea' },
-      { name: 'telephone', label: 'Telephone', type: 'text' },
-      { name: 'mobilenumber', label: 'Mobile Number', type: 'text' },
-    ],
-  },
-  {
-    key: 'category', table: 'category', pk: 'categoryid', label: 'Categories', icon: 'fa-layer-group',
-    group: 'Core', displayField: 'category',
-    fields: [
-      { name: 'category', label: 'Category', type: 'text', required: true },
-      { name: 'categoryarabic', label: 'Category (Arabic)', type: 'text' },
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'reqtrade', label: 'Required Trade', type: 'text' },
-      { name: 'salary', label: 'Salary', type: 'number' },
-      { name: 'quantity', label: 'Quantity', type: 'number' },
-      { name: 'empid', label: 'Employer ID', type: 'number' },
-    ],
-  },
-  {
-    key: 'employer', table: 'employer', pk: 'empid', label: 'Employers', icon: 'fa-briefcase',
-    group: 'Core', displayField: 'nameofemployer',
-    fields: [
-      { name: 'nameofemployer', label: 'Employer Name', type: 'text', required: true },
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'entrydate', label: 'Entry Date', type: 'date' },
-      { name: 'addressofemployer', label: 'Address', type: 'textarea' },
-      { name: 'visano', label: 'Visa No.', type: 'text' },
-      { name: 'idno', label: 'ID No.', type: 'text' },
-      { name: 'visadate', label: 'Visa Date', type: 'date' },
-    ],
-  },
-  {
-    key: 'datatable', table: 'datatable', pk: 'did', label: 'Candidates', icon: 'fa-id-card',
-    group: 'Core', displayField: 'name',
-    fields: [
-      { name: 'name', label: 'Candidate Name', type: 'text', required: true },
-      { name: 'fathersname', label: "Father's Name", type: 'text' },
-      { name: 'passportno', label: 'Passport No.', type: 'text' },
-      { name: 'coid', label: 'Agent', type: 'select', ref: 'agent' },
-      { name: 'categoryid', label: 'Category', type: 'select', ref: 'category' },
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'nameofowner', label: 'Name of Owner', type: 'text' },
-      { name: 'nameofegency', label: 'Name of Agency', type: 'text' },
-    ],
-  },
-  {
-    key: 'bio_data', table: 'bio_data', pk: 'id', label: 'Candidate Bio Data', icon: 'fa-address-card',
-    group: 'Core', displayField: 'id',
-    fields: [
-      { name: 'did', label: 'Candidate', type: 'select', ref: 'datatable', required: true },
-      { name: 'dob', label: 'Date of Birth', type: 'date' },
-      { name: 'gender', label: 'Gender', type: 'text' },
-      { name: 'maritalstatus', label: 'Marital Status', type: 'text' },
-      { name: 'nationality', label: 'Nationality', type: 'text' },
-      { name: 'religion', label: 'Religion', type: 'text' },
-      { name: 'height', label: 'Height', type: 'text' },
-      { name: 'weight', label: 'Weight', type: 'text' },
-      { name: 'education', label: 'Education', type: 'text' },
-      { name: 'experience', label: 'Experience', type: 'textarea' },
-      { name: 'address', label: 'Address', type: 'textarea' },
-      { name: 'phone', label: 'Phone', type: 'text' },
-    ],
-  },
-  {
-    key: 'sector', table: 'sector', pk: 'sid', label: 'Sectors', icon: 'fa-diagram-project',
-    group: 'Core', displayField: 'sector',
-    fields: [
-      { name: 'sector', label: 'Sector', type: 'text', required: true },
-      { name: 'coid', label: 'Agent', type: 'select', ref: 'agent' },
-    ],
-  },
-  {
-    key: 'source', table: 'source', pk: 'id', label: 'Sources', icon: 'fa-signs-post',
-    group: 'Core', displayField: 'name',
-    fields: [
-      { name: 'name', label: 'Source Name', type: 'text', required: true },
-    ],
-  },
+const CFG = window.APP_CONFIG || {};
+const backendReady = !!(CFG.SUPABASE_URL && CFG.SUPABASE_URL.indexOf('YOUR-PROJECT') === -1 && window.supabase);
+const sb = backendReady ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
 
-  // ---------------- FINANCE ----------------
-  {
-    key: 'rec', table: 'rec', pk: 'recid', label: 'Receipts', icon: 'fa-receipt',
-    group: 'Finance', displayField: 'receiptno',
-    fields: [
-      { name: 'receiptno', label: 'Receipt No.', type: 'text' },
-      { name: 'coid', label: 'Agent', type: 'select', ref: 'agent' },
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'accid', label: 'Account', type: 'select', ref: 'account' },
-      { name: 'receivedate', label: 'Receive Date', type: 'date' },
-      { name: 'amount', label: 'Amount', type: 'number', required: true },
-      { name: 'type', label: 'Type', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-    ],
-  },
-  {
-    key: 'pay', table: 'pay', pk: 'payid', label: 'Payments', icon: 'fa-money-bill-wave',
-    group: 'Finance', displayField: 'payid',
-    fields: [
-      { name: 'empid', label: 'Employer', type: 'select', ref: 'employer' },
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'accid', label: 'Account', type: 'select', ref: 'account' },
-      { name: 'paydate', label: 'Pay Date', type: 'date' },
-      { name: 'payamount', label: 'Amount', type: 'number', required: true },
-      { name: 'paytype', label: 'Pay Type', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-    ],
-  },
-  {
-    key: 'refund', table: 'refund', pk: 'refundid', label: 'Refunds', icon: 'fa-rotate-left',
-    group: 'Finance', displayField: 'refundid',
-    fields: [
-      { name: 'coid', label: 'Agent', type: 'select', ref: 'agent' },
-      { name: 'refunddate', label: 'Refund Date', type: 'date' },
-      { name: 'refundamount', label: 'Refund Amount', type: 'number' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-    ],
-  },
-  {
-    key: 'visaexpense', table: 'visaexpense', pk: 'vexpid', label: 'Visa Expenses', icon: 'fa-passport',
-    group: 'Finance', displayField: 'vexpid',
-    fields: [
-      { name: 'categoryid', label: 'Category', type: 'select', ref: 'category' },
-      { name: 'empid', label: 'Employer', type: 'select', ref: 'employer' },
-      { name: 'visacost', label: 'Visa Cost', type: 'number' },
-      { name: 'otherexp', label: 'Other Expense', type: 'number' },
-      { name: 'quantity', label: 'Quantity', type: 'number' },
-      { name: 'nettotal', label: 'Net Total', type: 'number' },
-    ],
-  },
-  {
-    key: 'account', table: 'account', pk: 'accid', label: 'Accounts', icon: 'fa-vault',
-    group: 'Finance', displayField: 'name',
-    fields: [
-      { name: 'name', label: 'Account Name', type: 'text', required: true },
-      { name: 'accountno', label: 'Account No.', type: 'text' },
-      { name: 'accounttitle', label: 'Account Title', type: 'text' },
-    ],
-  },
-  {
-    key: 'transition', table: 'transition', pk: 'tid', label: 'Transactions', icon: 'fa-right-left',
-    group: 'Finance', displayField: 'tid',
-    fields: [
-      { name: 'accid', label: 'Account', type: 'select', ref: 'account', required: true },
-      { name: 'date', label: 'Date', type: 'date' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'debit', label: 'Debit', type: 'number' },
-      { name: 'credit', label: 'Credit', type: 'number' },
-    ],
-  },
-  {
-    key: 'agentledger', table: 'agentledger', pk: 'id', label: 'Agent Ledger', icon: 'fa-book',
-    group: 'Finance', displayField: 'id',
-    fields: [
-      { name: 'coid', label: 'Agent', type: 'select', ref: 'agent', required: true },
-      { name: 'date', label: 'Date', type: 'date' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'debit', label: 'Debit', type: 'number' },
-      { name: 'credit', label: 'Credit', type: 'number' },
-      { name: 'balance', label: 'Balance', type: 'number' },
-    ],
-  },
-  {
-    key: 'employerledger', table: 'employerledger', pk: 'id', label: 'Employer Ledger', icon: 'fa-book-open',
-    group: 'Finance', displayField: 'id',
-    fields: [
-      { name: 'empid', label: 'Employer', type: 'select', ref: 'employer', required: true },
-      { name: 'date', label: 'Date', type: 'date' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'debit', label: 'Debit', type: 'number' },
-      { name: 'credit', label: 'Credit', type: 'number' },
-      { name: 'balance', label: 'Balance', type: 'number' },
-    ],
-  },
-  {
-    key: 'receivable', table: 'receivable', pk: 'id', label: 'Receivables', icon: 'fa-hand-holding-dollar',
-    group: 'Finance', displayField: 'id',
-    fields: [
-      { name: 'agencyid', label: 'Company', type: 'select', ref: 'company' },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'amount', label: 'Amount', type: 'number', required: true },
-      { name: 'duedate', label: 'Due Date', type: 'date' },
-      { name: 'status', label: 'Status', type: 'text' },
-    ],
-  },
-];
+const root = document.getElementById('root');
+let currentUser = null;
+let currentEntityKey = 'dashboard';
+let searchTerm = '';
+let cache = {};       // table -> rows (raw)
+let refCache = {};    // table -> {id: displayLabel} for FK dropdowns/labels
 
-// Entities shown as dashboard summary cards: [entityKey, cardLabel, isMoney, sumField]
-window.DASHBOARD_CARDS = [
-  ['datatable', 'Candidates', false, null],
-  ['agent', 'Agents', false, null],
-  ['company', 'Companies', false, null],
-  ['employer', 'Employers', false, null],
-  ['rec', 'Total Receipts', true, 'amount'],
-  ['pay', 'Total Payments', true, 'payamount'],
-];
+function el(tag, attrs = {}, children = []) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else if (k === 'html') e.innerHTML = v;
+    else e.setAttribute(k, v);
+  }
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c === null || c === undefined) return;
+    e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+function toast(msg) {
+  const t = el('div', { class: 'toast' }, msg);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function fmtMoney(n) {
+  if (n === null || n === undefined || n === '') return '—';
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function entityByKey(key) { return window.ENTITIES.find(e => e.key === key); }
+
+// Supabase/PostgREST caps select('*') at 1000 rows by default. Tables like
+// DATATABLE and BIO DATA have 3,000+ rows, so a single query silently drops
+// everything past row 1000. This fetches in pages of 1000 until a page comes
+// back short, so the app always has the FULL table, not just the first 1000.
+async function fetchAllRows(table, orderCol) {
+  const pageSize = 1000;
+  let from = 0;
+  let all = [];
+  while (true) {
+    let query = sb.from(table).select('*');
+    if (orderCol) query = query.order(orderCol, { ascending: false });
+    query = query.range(from, from + pageSize - 1);
+    const { data, error } = await query;
+    if (error) return { data: null, error };
+    all = all.concat(data || []);
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: all, error: null };
+}
+
+/* ---------------- AUTH ---------------- */
+async function checkSession() {
+  if (!sb) { renderNoBackend(); return; }
+  const { data } = await sb.auth.getSession();
+  if (data.session) { currentUser = data.session.user; await boot(); }
+  else { renderLogin(); }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') { currentUser = null; renderLogin(); }
+  });
+}
+
+function renderNoBackend() {
+  root.innerHTML = '';
+  root.appendChild(el('div', { class: 'login-screen' }, el('div', { class: 'login-box' }, [
+    el('h1', {}, 'Not connected'),
+    el('p', { class: 'sub' }, 'Edit config.js with your Supabase project URL and anon key, then reload this page.'),
+  ])));
+}
+
+function renderLogin() {
+  root.innerHTML = '';
+  const emailInp = el('input', { type: 'email', autocomplete: 'off' });
+  const passInp = el('input', { type: 'password', autocomplete: 'off' });
+  const errBox = el('div', { class: 'login-err' }, '');
+  const btn = el('button', {}, 'Log In');
+
+  const form = el('form', {
+    onsubmit: async (e) => {
+      e.preventDefault();
+      errBox.textContent = '';
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      const { data, error } = await sb.auth.signInWithPassword({ email: emailInp.value, password: passInp.value });
+      btn.disabled = false; btn.textContent = 'Log In';
+      if (error) { errBox.textContent = 'Incorrect email or password.'; return; }
+      currentUser = data.user;
+      await boot();
+    }
+  }, [
+    el('label', {}, 'Email'), emailInp,
+    el('label', {}, 'Password'), passInp,
+    errBox, btn,
+  ]);
+
+  root.appendChild(el('div', { class: 'login-screen' }, el('div', { class: 'login-box' }, [
+    el('div', { class: 'login-logo' }, 'RE'),
+    el('h1', {}, CFG.APP_NAME || 'Recruit Expert'),
+    el('p', { class: 'sub' }, 'Sign in with your staff account to continue.'),
+    form,
+  ])));
+}
+
+async function logout() {
+  if (sb) await sb.auth.signOut();
+}
+
+/* ---------------- BOOT / SHELL ---------------- */
+async function boot() {
+  currentEntityKey = 'dashboard';
+  await preloadRefCaches();
+  renderShell();
+  await showDashboard();
+}
+
+// Preload small lookup tables used for FK dropdown labels across the whole app
+async function preloadRefCaches() {
+  const refTables = new Set();
+  window.ENTITIES.forEach(ent => ent.fields.forEach(f => { if (f.type === 'select') refTables.add(f.ref); }));
+  await Promise.all([...refTables].map(async (key) => {
+    const ent = entityByKey(key);
+    if (!ent) return;
+    const { data, error } = await fetchAllRows(ent.table);
+    if (error) { console.warn('preload', ent.table, error.message); return; }
+    cache[ent.table] = data || [];
+    refCache[ent.table] = {};
+    (data || []).forEach(row => { refCache[ent.table][row[ent.pk]] = row[ent.displayField] ?? `#${row[ent.pk]}`; });
+  }));
+}
+
+function renderShell() {
+  root.innerHTML = '';
+  const groups = ['Core', 'Finance'];
+  const sidebar = el('div', { class: 'sidebar', id: 'sidebar' }, [
+    el('div', { class: 'sidebar-brand' }, [
+      el('div', { class: 'mark' }, 'RE'),
+      el('div', { class: 'txt' }, CFG.APP_NAME || 'Recruit Expert'),
+    ]),
+    el('div', { class: 'sidebar-item', 'data-key': 'dashboard', onclick: () => selectEntity('dashboard') }, [
+      el('i', { class: 'fa-solid fa-gauge' }), 'Dashboard',
+    ]),
+    ...groups.flatMap(g => [
+      el('div', { class: 'sidebar-group-label' }, g),
+      ...window.ENTITIES.filter(e => e.group === g).map(e =>
+        el('div', { class: 'sidebar-item', 'data-key': e.key, onclick: () => selectEntity(e.key) }, [
+          el('i', { class: `fa-solid ${e.icon}` }), e.label,
+        ])
+      ),
+    ]),
+    el('div', { class: 'sidebar-footer' }, [
+      el('button', { onclick: logout }, [el('i', { class: 'fa-solid fa-right-from-bracket' }), ' Log Out']),
+    ]),
+  ]);
+
+  const topbar = el('div', { class: 'topbar' }, [
+    el('h2', { id: 'pageTitle' }, 'Dashboard'),
+    el('div', { class: 'who' }, currentUser ? currentUser.email : ''),
+  ]);
+  const content = el('div', { class: 'content', id: 'content' }, []);
+  const main = el('div', { class: 'main' }, [topbar, content]);
+
+  root.appendChild(el('div', { class: 'app-shell' }, [sidebar, main]));
+}
+
+function setActiveSidebar(key) {
+  document.querySelectorAll('.sidebar-item').forEach(n => n.classList.toggle('active', n.getAttribute('data-key') === key));
+}
+
+async function selectEntity(key) {
+  currentEntityKey = key;
+  searchTerm = '';
+  setActiveSidebar(key);
+  if (key === 'dashboard') { await showDashboard(); return; }
+  const ent = entityByKey(key);
+  document.getElementById('pageTitle').textContent = ent.label;
+  await showEntityList(ent);
+}
+
+/* ---------------- DASHBOARD ---------------- */
+async function showDashboard() {
+  document.getElementById('pageTitle').textContent = 'Dashboard';
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  content.appendChild(el('div', { class: 'loading-state' }, 'Loading dashboard…'));
+
+  const cards = await Promise.all(window.DASHBOARD_CARDS.map(async ([key, label, isMoney, sumField]) => {
+    const ent = entityByKey(key);
+    if (isMoney) {
+      // Sums need every row's amount, so page through with fetchAllRows.
+      const { data, error } = await fetchAllRows(ent.table);
+      if (error) return { label, value: '—', isMoney };
+      const total = (data || []).reduce((s, r) => s + (Number(r[sumField]) || 0), 0);
+      return { label, value: fmtMoney(total), isMoney };
+    }
+    // Exact row count via head request — no 1000-row cap, no row data transferred.
+    const { count, error } = await sb.from(ent.table).select(ent.pk, { count: 'exact', head: true });
+    if (error) return { label, value: '—', isMoney };
+    return { label, value: count ?? 0, isMoney };
+  }));
+
+  content.innerHTML = '';
+  content.appendChild(el('div', { class: 'stat-grid' }, cards.map(c =>
+    el('div', { class: `stat-card ${c.isMoney ? 'money' : ''}` }, [
+      el('div', { class: 'label' }, c.label),
+      el('div', { class: 'value' }, String(c.value)),
+    ])
+  )));
+
+  content.appendChild(el('div', { class: 'dash-section-title' }, 'Quick Access'));
+  content.appendChild(el('div', { class: 'stat-grid' }, window.ENTITIES.map(ent =>
+    el('div', { class: 'stat-card', style: 'cursor:pointer', onclick: () => selectEntity(ent.key) }, [
+      el('div', { class: 'label' }, [el('i', { class: `fa-solid ${ent.icon}` }), ' ' + ent.group]),
+      el('div', { class: 'value', style: 'font-size:1rem' }, ent.label),
+    ])
+  )));
+}
+
+/* ---------------- ENTITY LIST (generic table + search + CRUD) ---------------- */
+async function showEntityList(ent) {
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  content.appendChild(el('div', { class: 'loading-state' }, 'Loading…'));
+
+  const { data, error } = await fetchAllRows(ent.table, ent.pk);
+  if (error) {
+    content.innerHTML = '';
+    content.appendChild(el('div', { class: 'empty-state' }, `Could not load ${ent.label}: ${error.message}`));
+    return;
+  }
+  cache[ent.table] = data || [];
+  refCache[ent.table] = {};
+  (data || []).forEach(row => { refCache[ent.table][row[ent.pk]] = row[ent.displayField] ?? `#${row[ent.pk]}`; });
+
+  renderEntityList(ent);
+}
+
+function renderEntityList(ent) {
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  const searchInput = el('input', {
+    type: 'text', placeholder: `Search ${ent.label.toLowerCase()}…`, value: searchTerm,
+    oninput: (e) => { searchTerm = e.target.value; renderEntityList(ent); },
+  });
+  const toolbar = el('div', { class: 'toolbar' }, [
+    el('div', { class: 'search-box' }, [el('i', { class: 'fa-solid fa-magnifying-glass' }), searchInput]),
+    el('div', { style: 'display:flex;gap:8px;' }, [
+      el('button', { class: 'btn btn-outline', onclick: () => exportCsv(ent) }, [el('i', { class: 'fa-solid fa-download' }), ' Export Report (CSV)']),
+      el('button', { class: 'btn btn-primary', onclick: () => openForm(ent, null) }, [el('i', { class: 'fa-solid fa-plus' }), ` Add ${ent.label.replace(/s$/, '')}`]),
+    ]),
+  ]);
+  content.appendChild(toolbar);
+
+  const rows = filteredRows(ent);
+  if (!rows.length) {
+    content.appendChild(el('div', { class: 'data-card' }, el('div', { class: 'empty-state' }, `No ${ent.label.toLowerCase()} found.`)));
+    return;
+  }
+
+  const visibleFields = ent.fields.slice(0, 6); // keep table readable; full record shown in edit modal
+  const thead = el('thead', {}, el('tr', {}, [
+    ...visibleFields.map(f => el('th', {}, f.label)),
+    el('th', {}, 'Actions'),
+  ]));
+  const tbody = el('tbody', {}, rows.map(row => el('tr', {}, [
+    ...visibleFields.map(f => el('td', {}, formatCell(f, row[f.name]))),
+    el('td', {}, el('div', { class: 'row-actions' }, [
+      el('button', { class: 'btn btn-outline btn-sm', onclick: () => openForm(ent, row) }, 'Edit'),
+      el('button', { class: 'btn btn-danger btn-sm', onclick: () => deleteRow(ent, row) }, 'Delete'),
+    ])),
+  ])));
+
+  content.appendChild(el('div', { class: 'data-card' }, el('table', { class: 'data-table' }, [thead, tbody])));
+}
+
+function formatCell(field, value) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (field.type === 'select') {
+    const refEnt = entityByKey(field.ref);
+    return (refCache[refEnt.table] && refCache[refEnt.table][value]) || `#${value}`;
+  }
+  if (field.type === 'number') return fmtMoney(value);
+  return String(value);
+}
+
+function filteredRows(ent) {
+  const rows = cache[ent.table] || [];
+  if (!searchTerm.trim()) return rows;
+  const q = searchTerm.toLowerCase();
+  return rows.filter(row =>
+    ent.fields.some(f => {
+      const v = row[f.name];
+      if (v === null || v === undefined) return false;
+      if (f.type === 'select') {
+        const refEnt = entityByKey(f.ref);
+        const label = (refCache[refEnt.table] && refCache[refEnt.table][v]) || '';
+        return label.toLowerCase().includes(q);
+      }
+      return String(v).toLowerCase().includes(q);
+    })
+  );
+}
+
+/* ---------------- FORM MODAL (Add / Edit) ---------------- */
+async function openForm(ent, existingRow) {
+  // make sure dropdown ref data is fresh
+  await preloadRefCaches();
+
+  const overlay = el('div', { class: 'modal-overlay', onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
+  const inputs = {};
+
+  const fieldNodes = ent.fields.map(f => {
+    let inputEl;
+    const val = existingRow ? existingRow[f.name] : '';
+    if (f.type === 'textarea') {
+      inputEl = el('textarea', {}, '');
+      inputEl.value = val ?? '';
+    } else if (f.type === 'select') {
+      const refEnt = entityByKey(f.ref);
+      const options = [el('option', { value: '' }, '— none —')];
+      (cache[refEnt.table] || []).forEach(r => {
+        options.push(el('option', { value: r[refEnt.pk] }, `${r[refEnt.displayField] ?? ('#' + r[refEnt.pk])}`));
+      });
+      inputEl = el('select', {}, options);
+      inputEl.value = val ?? '';
+    } else {
+      inputEl = el('input', { type: f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text' });
+      if (f.type === 'number') inputEl.step = 'any';
+      inputEl.value = val ?? '';
+    }
+    inputs[f.name] = inputEl;
+    const wrapClass = (f.type === 'textarea') ? 'f-field full' : 'f-field';
+    return el('div', { class: wrapClass }, [
+      el('label', {}, f.label + (f.required ? ' *' : '')),
+      inputEl,
+    ]);
+  });
+
+  const errBox = el('div', { class: 'login-err' }, '');
+  const saveBtn = el('button', { class: 'btn btn-primary' }, existingRow ? 'Save Changes' : 'Add ' + ent.label.replace(/s$/, ''));
+
+  const form = el('form', {
+    onsubmit: async (e) => {
+      e.preventDefault();
+      errBox.textContent = '';
+      const payload = {};
+      let valid = true;
+      ent.fields.forEach(f => {
+        let v = inputs[f.name].value;
+        if (f.type === 'number') v = v === '' ? null : Number(v);
+        else if (f.type === 'select') v = v === '' ? null : Number(v);
+        else v = v === '' ? null : v;
+        if (f.required && (v === null || v === '')) valid = false;
+        payload[f.name] = v;
+      });
+      if (!valid) { errBox.textContent = 'Please fill all required fields.'; return; }
+
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+      let result;
+      if (existingRow) result = await sb.from(ent.table).update(payload).eq(ent.pk, existingRow[ent.pk]);
+      else result = await sb.from(ent.table).insert(payload);
+      saveBtn.disabled = false; saveBtn.textContent = existingRow ? 'Save Changes' : 'Add ' + ent.label.replace(/s$/, '');
+
+      if (result.error) { errBox.textContent = result.error.message; return; }
+      overlay.remove();
+      toast(existingRow ? 'Updated successfully.' : 'Added successfully.');
+      await showEntityList(ent);
+    },
+  }, [
+    el('div', { class: 'form-grid' }, fieldNodes),
+    errBox,
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-outline', onclick: () => overlay.remove() }, 'Cancel'),
+      saveBtn,
+    ]),
+  ]);
+
+  const box = el('div', { class: 'modal-box' }, [
+    el('button', { class: 'modal-close', onclick: () => overlay.remove() }, '✕'),
+    el('h3', {}, existingRow ? `Edit ${ent.label.replace(/s$/, '')}` : `Add ${ent.label.replace(/s$/, '')}`),
+    form,
+  ]);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+async function deleteRow(ent, row) {
+  if (!confirm(`Delete this ${ent.label.toLowerCase().replace(/s$/, '')} record? This cannot be undone.`)) return;
+  const { error } = await sb.from(ent.table).delete().eq(ent.pk, row[ent.pk]);
+  if (error) { toast('Delete failed: ' + error.message); return; }
+  toast('Deleted.');
+  await showEntityList(ent);
+}
+
+/* ---------------- CSV EXPORT (Reports) ---------------- */
+function exportCsv(ent) {
+  const rows = filteredRows(ent);
+  if (!rows.length) { toast('Nothing to export.'); return; }
+  const headers = ent.fields.map(f => f.label);
+  const lines = [headers.join(',')];
+  rows.forEach(row => {
+    const line = ent.fields.map(f => {
+      let v = formatCell(f, row[f.name]);
+      v = String(v).replace(/"/g, '""');
+      return `"${v}"`;
+    });
+    lines.push(line.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${ent.table}-report.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ---------------- INIT ---------------- */
+checkSession();
